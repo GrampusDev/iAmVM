@@ -1,9 +1,15 @@
 import _winreg as wreg
 import os
+import random
+import ctypes
 import ConfigParser
+from spoofmac.interface import (
+    set_interface_mac,
+    get_os_spoofer
+)
 
 # Main configuration file
-main_conf_path = r"C:\Education\Project\I_Am_VM\iAmVM\iAmVM_conf.ini"
+main_conf_path = r".\iAmVM_conf.ini"
 
 
 # Represents registry value
@@ -25,7 +31,7 @@ def apply_reg_change(reg_key, reg_values):
         wreg.SetValueEx(reg_key, val.name, 0, val.type, val.data)
 
 
-#TODO: This function
+# TODO: This function
 def remove_reg_keys():
     try:
         wreg.DeleteKeyEx(wreg.HKEY_LOCAL_MACHINE,
@@ -57,8 +63,8 @@ def create_reg_keys():
         except WindowsError:
             try:
                 reg_key = wreg.CreateKeyEx(wreg.HKEY_LOCAL_MACHINE,
-                                       sec_without_hklm, 0,
-                                       (wreg.KEY_WOW64_64KEY + wreg.KEY_ALL_ACCESS))
+                                           sec_without_hklm, 0,
+                                           (wreg.KEY_WOW64_64KEY + wreg.KEY_ALL_ACCESS))
             except WindowsError as e:
                 print "Failed to create key :" + sec + '\n', e
                 # Move on to the next key
@@ -116,12 +122,12 @@ def filter_reg_file():
     with open(main_conf.get("Paths", "FilteredRegFile"), "w") as dest_file:
         for line in content:
             if '[HKEY' in line and ']' in line:
-                #if r"\{" in line and r"}" in line or '[HKEY_USERS' in line or \
+                # if r"\{" in line and r"}" in line or '[HKEY_USERS' in line or \
                 #        'HardwareConfig' in line:
                 #    is_undesired_section = 1
                 #    is_write = 0
                 #    continue
-                #else:
+                # else:
                 is_undesired_section = 0
                 # If previous key contains values that are VM specific than write him to dest file
                 if is_write:
@@ -151,23 +157,79 @@ def filter_reg_file():
                 is_write = 1
 
 
+def get_random_mac():
+    """
+    Returns random Virtual Box specific MAC address
+    """
+    mac = [0x08, 0x00, 0x27,
+           random.randint(0x00, 0x7f),
+           random.randint(0x00, 0xff),
+           random.randint(0x00, 0xff)]
+    return ':'.join('{0:02X}'.format(o) for o in mac)
+
+
+def spoof_to_vm_mac():
+    """
+    Spoof current mac to Virtual Box specific MAC address
+    """
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    spoofer = get_os_spoofer()
+    if not main_conf.has_section('OldMacs'):
+        main_conf.add_section('OldMacs')
+    for port, device, address, current_address in spoofer.find_interfaces():
+
+        # Save old MAC
+        main_conf.set('OldMacs', device, address.replace('-', ':'))
+
+        new_mac = get_random_mac()
+        set_interface_mac(device, new_mac, port)
+    f = open(main_conf_path, 'w')
+    main_conf.write(f)
+    f.close()
+
+
+def revert_to_physical_mac():
+    """
+    Revert to old MAC
+    """
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    spoofer = get_os_spoofer()
+    for port, device, address, current_address in spoofer.find_interfaces():
+        old_mac = main_conf.get('OldMacs', device)
+        set_interface_mac(device, old_mac, port)
+
+
 # Main
 if __name__ == '__main__':
-    ans = raw_input('Welcome to iAmVM, choose option: \n'
-                    '1. Transform to VM\n'
-                    '2. Transform back to physical PC\n'
-                    '3. Filter reg file\n'
-                    '4. Exit\n\n'
-                    '--> ')
-    if ans == '1':
-        print 'Transforming to VM...'
-        create_reg_keys()
-    elif ans == '2':
-        print 'Transforming to physical...'
-        # TODO: remove_reg_keys
-        remove_reg_keys()
-    elif ans == '3':
-        print 'Filtering reg file...'
-        filter_reg_file()
+    # Check if the script runs as admin
+    if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+        print "You should run it with as admin, exiting..."
     else:
-        print 'Have a nice day!'
+        ans = raw_input('Welcome to iAmVM, choose option: \n'
+                        '1. Transform to VM Registry\n'
+                        '2. Transform back to physical PC\n'
+                        '3. Filter reg file\n'
+                        '4. Spoof to VM MAC\n'
+                        '5. Revert to physical MAC\n'
+                        '6. Exit\n\n'
+                        '--> ')
+        if ans == '1':
+            print 'Transforming to VM...'
+            create_reg_keys()
+        elif ans == '2':
+            print 'Transforming to physical...'
+            # TODO: remove_reg_keys
+            remove_reg_keys()
+        elif ans == '3':
+            print 'Filtering reg file...'
+            filter_reg_file()
+        elif ans == '4':
+            print 'Changing MAC...'
+            spoof_to_vm_mac()
+        elif ans == '5':
+            print 'Reverting MAC...'
+            revert_to_physical_mac()
+        else:
+            print 'Have a nice day!'
