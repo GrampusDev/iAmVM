@@ -189,6 +189,7 @@ def spoof_to_vm_mac():
     f.close()
 
 
+
 def revert_to_physical_mac():
     """
     Revert to old MAC
