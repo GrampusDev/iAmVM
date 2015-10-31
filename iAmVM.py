@@ -201,7 +201,6 @@ def revert_to_physical_mac():
         set_interface_mac(device, old_mac, port)
 
 
-
 # Main
 if __name__ == '__main__':
     # Check if the script runs as admin
