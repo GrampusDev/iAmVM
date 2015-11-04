@@ -1,8 +1,11 @@
 import _winreg as wreg
 import os
+import shutil
 import random
 import ctypes
 import ConfigParser
+import subprocess
+
 from spoofmac.interface import (
     set_interface_mac,
     get_os_spoofer
@@ -188,8 +191,6 @@ def spoof_to_vm_mac():
     main_conf.write(f)
     f.close()
 
-
-
 def revert_to_physical_mac():
     """
     Revert to old MAC
@@ -201,7 +202,82 @@ def revert_to_physical_mac():
         old_mac = main_conf.get('OldMacs', device)
         set_interface_mac(device, old_mac, port)
 
- 
+def create_files():
+    "Creates File, where located at the file_name"
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    files_name_file=(main_conf.get("Paths", "fileNames"))
+    files_name=open(files_name_file, 'r')
+    print("Creating Files...\n")
+    for file in files_name:
+        file=file.rstrip()
+        if not os.path.isfile(file):
+            dir_path = os.path.dirname(file)
+            if not os.path.isdir(dir_path):
+                try:
+                    os.makedirs(dir_path)
+                except OSError as exception:
+                    print("Couldn't make dir " + repr(dir))
+            f=open(file,'w+')
+            f.close()
+            print(repr(file))
+    print("Done!")
+    return
+
+def remove_files():
+    "Remove Files, where located at the file_name"
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    files_name_file=(main_conf.get("Paths", "fileNames"))
+    files_name=open(files_name_file,'r')
+    print("Removing Files...\n")
+    for file in files_name:
+        file=file.rstrip()
+        if os.path.isfile(file):
+            os.remove(file)
+            dir_path = os.path.dirname(file)
+            try:
+                os.removedirs(dir_path)
+            except OSError as exception:
+                pass
+            print(file)
+    print("Done!")
+    return
+
+
+def create_dummy_process():
+    "runs filepath as a process at system startup"
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    src=(main_conf.get("Paths", "processExec"))
+    process_list_file=(main_conf.get("Paths", "processList"))
+    process_list=open(process_list_file,'r')
+    for filepath in process_list:
+        filename=os.path.splitext(os.path.basename(filepath))[0]
+        reg_path="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+
+        #copy file to filepath
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        shutil.copy2(src,filepath)
+
+        #add to registry
+        key=wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE,reg_path,0,wreg.KEY_ALL_ACCESS)
+        wreg.SetValueEx(key,filename,0,wreg.REG_SZ,filepath)
+        wreg.CloseKey(key)
+        print ("Created Process " + filepath)
+
+def run_powershell():
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    script_name=(main_conf.get("Paths", "psScript"))
+    psScript=os.path.abspath(script_name)
+    cmd="powershell -ExecutionPolicy Bypass -Command \"" + psScript + " Install\""
+    print cmd
+    proc=subprocess.call(cmd,shell=True)
+    print 2
+
+
 # Main
 if __name__ == '__main__':
     # Check if the script runs as admin
@@ -214,7 +290,11 @@ if __name__ == '__main__':
                         '3. Filter reg file\n'
                         '4. Spoof to VM MAC\n'
                         '5. Revert to physical MAC\n'
-                        '6. Exit\n\n'
+                        '6. Create VM files\n'
+                        '7. Remove VM files\n'
+                        '8. Create Processes\n'
+                        '9. Add Audits and create services \n'
+                        '10. Exit\n\n'
                         '--> ')
         if ans == '1':
             print 'Transforming to VM...'
@@ -232,5 +312,17 @@ if __name__ == '__main__':
         elif ans == '5':
             print 'Reverting MAC...'
             revert_to_physical_mac()
+        elif ans == '6':
+            print 'Creating VM files...'
+            create_files()
+        elif ans == '7':
+            print 'Removing VM files MAC...'
+            remove_files()
+        elif ans == '8':
+            print 'Creating dummy processes...'
+            create_dummy_process()
+        elif ans == '9':
+            print 'Adding audits and creating services...'
+            run_powershell()
         else:
             print 'Have a nice day!'

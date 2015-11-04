@@ -1,0 +1,20 @@
+function DelAuditFromRegKey {
+    param
+    (
+        [Parameter(Mandatory=$true)]
+        [string]$key
+    )
+
+    Get-Acl $key -Audit | Format-List Path,AuditToString | Out-File -FilePath 'reg_before_delete.txt' -Width 200 -Append
+    $RegKey_ACL = Get-Acl $key
+    $AccessRule = New-Object System.Security.AccessControl.RegistryAuditRule("Users","ReadKey”,"none","none",”Success")
+    $RegKey_ACL.RemoveAuditRule($AccessRule)
+    $RegKey_ACL | Set-Acl $key
+    Get-Acl $key -Audit | Format-List Path,AuditToString | Out-File -FilePath 'reg_after_delete.txt' -Width 200 -Append
+}
+
+$keysToAudit=Get-Content .\Reg.txt
+foreach ($key in $keysToAudit) {
+    DelAuditFromRegKey $key
+    "$key"
+} 
