@@ -141,7 +141,7 @@ def filter_reg_file():
             elif is_undesired_section == 0:
                 # if r"c:\\windows\\system32" in line.lower() or \
                 #         'PnpLockdownFiles' in line or \
-                #         (r"{" in line and r"}" in line) or \
+                #         (r"{" in line and r"}" in line) or or\
                 #         line.startswith('@'):
                 #     continue
 
