@@ -8,6 +8,9 @@ from spoofmac.interface import (
     get_os_spoofer
 )
 
+import logging
+logging.basicConfig(filename='iAmLog.log',level=logging.DEBUG)
+
 # Main configuration file
 main_conf_path = r".\iAmVM_conf.ini"
 
@@ -66,7 +69,7 @@ def create_reg_keys():
                                            sec_without_hklm, 0,
                                            (wreg.KEY_WOW64_64KEY + wreg.KEY_ALL_ACCESS))
             except WindowsError as e:
-                print "Failed to create key :" + sec + '\n', e
+                logging.debug("Failed to create key :" + sec + '\n' + e.strerror)
                 # Move on to the next key
                 continue
 
@@ -80,7 +83,7 @@ def create_reg_keys():
                 opt_data = opt_val.split(':')[1]
                 opt = opt.strip('"')
                 try:
-                    reg_values.append(RegValue(opt, wreg.REG_DWORD, int(opt_data)))
+                    reg_values.append(RegValue(opt, wreg.REG_DWORD, int(opt_data, 16)))
                 except Exception as e:
                     print e
                     continue
@@ -121,7 +124,7 @@ def filter_reg_file():
     # Iterate over all registry keys
     with open(main_conf.get("Paths", "FilteredRegFile"), "w") as dest_file:
         for line in content:
-            if '[HKEY' in line and ']' in line:
+            if '[HKEY_LOCAL_MACHINE' in line and ']' in line:
                 # if r"\{" in line and r"}" in line or '[HKEY_USERS' in line or \
                 #        'HardwareConfig' in line:
                 #    is_undesired_section = 1
@@ -201,7 +204,7 @@ def revert_to_physical_mac():
         old_mac = main_conf.get('OldMacs', device)
         set_interface_mac(device, old_mac, port)
 
- 
+
 # Main
 if __name__ == '__main__':
     # Check if the script runs as admin
