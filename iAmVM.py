@@ -5,6 +5,10 @@ import random
 import ctypes
 import ConfigParser
 import subprocess
+import sys
+
+from PyQt4 import QtCore, QtGui
+from iAmVM_GUI import Ui_Form
 
 from spoofmac.interface import (
     set_interface_mac,
@@ -12,10 +16,78 @@ from spoofmac.interface import (
 )
 
 import logging
-logging.basicConfig(filename='iAmLog.log',level=logging.DEBUG)
+logging.basicConfig(filename='iAmLog.log', level=logging.DEBUG)
 
 # Main configuration file
 main_conf_path = r".\iAmVM_conf.ini"
+
+
+class MyForm(QtGui.QMainWindow):
+
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.ui = Ui_Form()
+        self.ui.setupUi(self)
+        # self.setStyleSheet("background-image: url(./iAmVM_Background2.jpg); background-repeat: no-repeat; background-position: center;")
+
+        self.ui.pushButton.clicked.connect(self.transform_to_vm_click)
+        self.ui.pushButton_2.clicked.connect(self.transform_to_physical_click)
+        self.ui.pushButton_3.clicked.connect(self.filter_reg_click)
+        self.ui.pushButton_4.clicked.connect(self.spoof_to_vm_mac_click)
+        self.ui.pushButton_5.clicked.connect(self.revert_to_physical_mac_click)
+        self.ui.pushButton_6.clicked.connect(self.create_vm_files_click)
+        self.ui.pushButton_7.clicked.connect(self.remove_vm_files_click)
+        self.ui.pushButton_8.clicked.connect(self.create_vm_processes_click)
+        self.ui.pushButton_9.clicked.connect(self.add_audits_click)
+        self.ui.pushButton_10.clicked.connect(self.exit_click)
+
+    def transform_to_vm_click(self):
+        self.ui.textEdit.setText("Transforming to VM...")
+        # create_reg_keys()
+        self.ui.textEdit.setText("Done Transforming to VM")
+
+    def transform_to_physical_click(self):
+        self.ui.textEdit.setText("Transforming to Physical...")
+        # remove_reg_keys()
+        self.ui.textEdit.setText("Done Transforming to Physical")
+
+    def filter_reg_click(self):
+        self.ui.textEdit.setText("Filtering the registry file...")
+        # filter_reg_file()
+        self.ui.textEdit.setText("Done Filtering the registry file")
+
+    def spoof_to_vm_mac_click(self):
+        self.ui.textEdit.setText("Spoofing to VM MAC...")
+        # spoof_to_vm_mac()
+        self.ui.textEdit.setText("Done Spoofing to VM MAC")
+
+    def revert_to_physical_mac_click(self):
+        self.ui.textEdit.setText("Reverting to original MAC...")
+        # revert_to_physical_mac()
+        self.ui.textEdit.setText("Done Reverting to original MAC")
+
+    def create_vm_files_click(self):
+        self.ui.textEdit.setText("Creating VM files...")
+        # create_files()
+        self.ui.textEdit.setText("Done Creating VM files")
+
+    def remove_vm_files_click(self):
+        self.ui.textEdit.setText("Removing VM files...")
+        # remove_files()
+        self.ui.textEdit.setText("Done Removing VM files")
+
+    def create_vm_processes_click(self):
+        self.ui.textEdit.setText("Creating VM processes...")
+        # create_dummy_process()
+        self.ui.textEdit.setText("Done Creating VM processes")
+
+    def add_audits_click(self):
+        self.ui.textEdit.setText("Adding auditing...")
+        # run_powershell()
+        self.ui.textEdit.setText("Done Adding auditing")
+
+    def exit_click(self):
+        self.close()
 
 
 # Represents registry value
@@ -184,7 +256,6 @@ def spoof_to_vm_mac():
     if not main_conf.has_section('OldMacs'):
         main_conf.add_section('OldMacs')
     for port, device, address, current_address in spoofer.find_interfaces():
-
         # Save old MAC
         main_conf.set('OldMacs', device, address.replace('-', ':'))
 
@@ -193,6 +264,7 @@ def spoof_to_vm_mac():
     f = open(main_conf_path, 'w')
     main_conf.write(f)
     f.close()
+
 
 def revert_to_physical_mac():
     """
@@ -205,12 +277,13 @@ def revert_to_physical_mac():
         old_mac = main_conf.get('OldMacs', device)
         set_interface_mac(device, old_mac, port)
 
+
 def create_files():
     "Creates File, where located at the file_name"
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
-    files_name_file=(main_conf.get("Paths", "fileNames"))
-    files_name=open(files_name_file, 'r')
+    files_name_file = (main_conf.get("Paths", "fileNames"))
+    files_name = open(files_name_file, 'r')
     print("Creating Files...\n")
     for file in files_name:
         file=file.rstrip()
@@ -226,6 +299,7 @@ def create_files():
             print(repr(file))
     print("Done!")
     return
+
 
 def remove_files():
     "Remove Files, where located at the file_name"
@@ -270,6 +344,7 @@ def create_dummy_process():
         wreg.CloseKey(key)
         print ("Created Process " + filepath)
 
+
 def run_powershell():
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
@@ -281,52 +356,57 @@ def run_powershell():
     print 2
 
 
-
 # Main
 if __name__ == '__main__':
+    # Change working directory to script directory
+    os.chdir(os.path.dirname(sys.argv[0]))
+
     # Check if the script runs as admin
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
-        print "You should run it with as admin, exiting..."
+        print "You should run it as admin, exiting..."
     else:
-        ans = raw_input('Welcome to iAmVM, choose option: \n'
-                        '1. Transform to VM Registry\n'
-                        '2. Transform back to physical PC\n'
-                        '3. Filter reg file\n'
-                        '4. Spoof to VM MAC\n'
-                        '5. Revert to physical MAC\n'
-                        '6. Create VM files\n'
-                        '7. Remove VM files\n'
-                        '8. Create Processes\n'
-                        '9. Add Audits and create services \n'
-                        '10. Exit\n\n'
-                        '--> ')
-        if ans == '1':
-            print 'Transforming to VM...'
-            create_reg_keys()
-        elif ans == '2':
-            print 'Transforming to physical...'
-            # TODO: remove_reg_keys
-            remove_reg_keys()
-        elif ans == '3':
-            print 'Filtering reg file...'
-            filter_reg_file()
-        elif ans == '4':
-            print 'Changing MAC...'
-            spoof_to_vm_mac()
-        elif ans == '5':
-            print 'Reverting MAC...'
-            revert_to_physical_mac()
-        elif ans == '6':
-            print 'Creating VM files...'
-            create_files()
-        elif ans == '7':
-            print 'Removing VM files MAC...'
-            remove_files()
-        elif ans == '8':
-            print 'Creating dummy processes...'
-            create_dummy_process()
-        elif ans == '9':
-            print 'Adding audits and creating services...'
-            run_powershell()
-        else:
-            print 'Have a nice day!'
+        app = QtGui.QApplication(sys.argv)
+        my_app = MyForm()
+        my_app.show()
+        sys.exit(app.exec_())
+        # ans = raw_input('Welcome to iAmVM, choose option: \n'
+        #                 '1. Transform to VM Registry\n'
+        #                 '2. Transform back to physical PC\n'
+        #                 '3. Filter reg file\n'
+        #                 '4. Spoof to VM MAC\n'
+        #                 '5. Revert to physical MAC\n'
+        #                 '6. Create VM files\n'
+        #                 '7. Remove VM files\n'
+        #                 '8. Create Processes\n'
+        #                 '9. Add Audits and create services \n'
+        #                 '10. Exit\n\n'
+        #                 '--> ')
+        # if ans == '1':
+        #     print 'Transforming to VM...'
+        #     # create_reg_keys()
+        # elif ans == '2':
+        #     print 'Transforming to physical...'
+        #     remove_reg_keys()
+        # elif ans == '3':
+        #     print 'Filtering reg file...'
+        #     filter_reg_file()
+        # elif ans == '4':
+        #     print 'Changing MAC...'
+        #     spoof_to_vm_mac()
+        # elif ans == '5':
+        #     print 'Reverting MAC...'
+        #     revert_to_physical_mac()
+        # elif ans == '6':
+        #     print 'Creating VM files...'
+        #     create_files()
+        # elif ans == '7':
+        #     print 'Removing VM files MAC...'
+        #     remove_files()
+        # elif ans == '8':
+        #     print 'Creating dummy processes...'
+        #     create_dummy_process()
+        # elif ans == '9':
+        #     print 'Adding audits and creating services...'
+        #     run_powershell()
+        # else:
+        #     print 'Have a nice day!'
