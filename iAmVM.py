@@ -23,8 +23,8 @@ logging.basicConfig(filename='iAmLog.log', level=logging.DEBUG)
 main_conf_path = r".\iAmVM_conf.ini"
 BUFFER_SIZE = 1024
 
-class MyForm(QtGui.QMainWindow):
 
+class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_Form()
