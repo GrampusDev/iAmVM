@@ -6,6 +6,7 @@ import ctypes
 import ConfigParser
 import subprocess
 import sys
+import socket
 
 from PyQt4 import QtCore, QtGui
 from iAmVM_GUI import Ui_Form
@@ -20,7 +21,7 @@ logging.basicConfig(filename='iAmLog.log', level=logging.DEBUG)
 
 # Main configuration file
 main_conf_path = r".\iAmVM_conf.ini"
-
+BUFFER_SIZE = 1024
 
 class MyForm(QtGui.QMainWindow):
 
@@ -40,6 +41,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.pushButton_8.clicked.connect(self.create_vm_processes_click)
         self.ui.pushButton_9.clicked.connect(self.add_audits_click)
         self.ui.pushButton_10.clicked.connect(self.exit_click)
+        self.ui.pushButton_11.clicked.connect(self.network_defence_click)
 
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
@@ -86,6 +88,12 @@ class MyForm(QtGui.QMainWindow):
         # run_powershell()
         self.ui.textEdit.setText("Done Adding auditing")
 
+    def network_defence_click(self):
+        self.ui.textEdit.setText("Sending message to DGW to set up network defence...")
+        response = ''
+        # response = start_network_defence()
+        self.ui.textEdit.setText(response)
+
     def exit_click(self):
         self.close()
 
@@ -96,6 +104,35 @@ class RegValue:
         self.name = val_name
         self.type = val_type
         self.data = val_data
+
+
+def get_os():
+    """
+    Return system OS name.
+    :return: string
+    """
+    if sys.platform.startswith('linux'):
+        return 'Linux'
+    elif sys.platform.startswith('win'):
+        return 'Windows'
+
+
+def start_network_defence():
+    main_conf = ConfigParser.ConfigParser()
+    main_conf.read(main_conf_path)
+    host = main_conf.get("Network", "defaultgateway")
+    port = main_conf.get("Network", "port")
+    local_os = get_os()
+    if local_os == 'Windows':
+        msg = 'Linux'
+    else:
+        msg = 'Windows'
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, int(port)))
+    s.send(msg)
+    data = s.recv(BUFFER_SIZE)
+    s.close()
+    return data
 
 
 def apply_reg_change(reg_key, reg_values):
