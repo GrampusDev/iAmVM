@@ -23,5 +23,6 @@ if '%errorlevel%' NEQ '0' (
     pushd "%CD%"
     CD /D "%~dp0"
 :--------------------------------------
-psexec -s -d -i "python &{Set-Location %~dp0;./IAmVM.py}"
-psexec -s -d -i cmd.exe
+@echo off
+data\PsExec.exe -s -d -i C:\Python27\python.exe %~dp0iAmVM.py
+data\PsExec.exe -s -d -i cmd.exe

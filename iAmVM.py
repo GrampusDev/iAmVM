@@ -395,6 +395,9 @@ def run_powershell():
 
 # Main
 if __name__ == '__main__':
+    # Change working directory to script directory
+    os.chdir(os.path.dirname(sys.argv[0]))
+
     # Check if the script runs as admin
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
         print "You should run it as admin, exiting..."
