@@ -5,15 +5,17 @@
     )
 
 . ./functions.ps1
- 
+$iniConf=Get-IniContent .\iAmVM_conf.ini
+$fileNames=$iniConf.Paths.fileNames.ToString()
+$regKeysPath=$iniConf.Paths.regKeysPath.ToString()
 if ($action -eq "Install") {
     "Script is Running... Please Wait.."
-	$filesToAudit=Get-Content .\Files.txt
+	$filesToAudit=Get-Content .\$fileNames
 	foreach ($file in $filesToAudit) {
     		AddAuditToFile $file
 	}
 
-	$keysToAudit=Get-Content .\Reg.txt
+	$keysToAudit=Get-Content .\$regKeysPath
 	foreach ($key in $keysToAudit) {
     	AddAuditToRegKey $key
 	}
