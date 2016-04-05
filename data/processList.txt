@@ -1,0 +1,7 @@
+C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxWHQLFake.exe
+C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxTray.exe
+C:/Windows/System32/VBoxTray.exe
+C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxControl.exe
+C:/Windows/System32/VBoxControl.exe
+C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxDrvInst.exe
+C:/Windows/System32/VBoxService.exe
