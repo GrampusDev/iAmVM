@@ -28,7 +28,6 @@ if __name__ == '__main__':
     hand = win32evtlog.OpenEventLog(server,logtype)
     flags = win32evtlog.EVENTLOG_FORWARDS_READ|win32evtlog.EVENTLOG_SEQUENTIAL_READ
     total = win32evtlog.GetNumberOfEventLogRecords(hand)
-    print known_list
     while True:
         events = win32evtlog.ReadEventLog(hand, flags,0)
         if events:
@@ -38,18 +37,20 @@ if __name__ == '__main__':
                         data_list = event.StringInserts
                         if (data_list):
                            for file in known_list:
-                               for data in data_list:
-                                   if file in data:
+                                   for data in data_list:
+                                       if file in data and file in data_list[6]:
                                         print 'Event Category:', event.EventCategory
                                         print 'Time Generated:', event.TimeGenerated
                                         print 'Source Name:', event.SourceName
                                         print 'Event ID:', event.EventID
                                         print 'Event Type:', event.EventType
-                                        processType=data_list[5]
-                                        processLocation=data_list[6]
-                                        processCalled=data_list[len(data_list)-2]
+                                        processType=data_list[5].encode('utf-8')
+                                        processId=data_list[len(data_list)-3].encode('utf-8')
+                                        processCalled=data_list[len(data_list)-2].encode('utf-8')
                                         print "Kind: {}".format(processType)
+                                        processLocation=data_list[6]
                                         print "Process that accessed: {}".format(processLocation)
                                         print "Process initiated the call: {}".format(processCalled)
+                                        print "Process initiated ID: {}".format(processId)
                                         print "***********************"
                                         break
