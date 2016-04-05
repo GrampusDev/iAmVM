@@ -93,7 +93,7 @@ class Ui_Form(object):
         self.pushButton_9.setIcon(icon7)
         self.pushButton_9.setObjectName(_fromUtf8("pushButton_9"))
         self.pushButton_10 = QtGui.QPushButton(Form)
-        self.pushButton_10.setGeometry(QtCore.QRect(220, 340, 171, 23))
+        self.pushButton_10.setGeometry(QtCore.QRect(220, 370, 171, 23))
         icon8 = QtGui.QIcon()
         icon8.addPixmap(QtGui.QPixmap(_fromUtf8("icons/exit.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.pushButton_10.setIcon(icon8)
@@ -101,6 +101,12 @@ class Ui_Form(object):
         self.textEdit = QtGui.QTextEdit(Form)
         self.textEdit.setGeometry(QtCore.QRect(160, 430, 291, 31))
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
+        self.pushButton_11 = QtGui.QPushButton(Form)
+        self.pushButton_11.setGeometry(QtCore.QRect(220, 340, 171, 23))
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(_fromUtf8("icons/Network.ico")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_11.setIcon(icon9)
+        self.pushButton_11.setObjectName(_fromUtf8("pushButton_11"))
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -119,4 +125,5 @@ class Ui_Form(object):
         self.pushButton_8.setText(_translate("Form", "Create Processes", None))
         self.pushButton_9.setText(_translate("Form", "Add Audits and create services", None))
         self.pushButton_10.setText(_translate("Form", "Exit", None))
+        self.pushButton_11.setText(_translate("Form", "Network Defence", None))
 
