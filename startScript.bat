@@ -24,5 +24,5 @@ if '%errorlevel%' NEQ '0' (
     CD /D "%~dp0"
 :--------------------------------------
 @echo off
-data\PsExec.exe -s -d -i C:\Python27\python.exe %~dp0iAmVM.py
+data\PsExec.exe -s -d -i C:\Python27\pythonw.exe %~dp0iAmVM.py
 data\PsExec.exe -s -d -i cmd.exe

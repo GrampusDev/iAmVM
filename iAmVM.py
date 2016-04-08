@@ -45,7 +45,7 @@ class MyForm(QtGui.QMainWindow):
 
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
-        # create_reg_keys()
+        create_reg_keys()
         self.ui.textEdit.setText("Done Transforming to VM")
 
     def transform_to_physical_click(self):
@@ -55,7 +55,7 @@ class MyForm(QtGui.QMainWindow):
 
     def filter_reg_click(self):
         self.ui.textEdit.setText("Filtering the registry file...")
-        # filter_reg_file()
+        filter_reg_file()
         self.ui.textEdit.setText("Done Filtering the registry file")
 
     def spoof_to_vm_mac_click(self):
@@ -166,11 +166,14 @@ def create_reg_keys():
 
     # Get sections from already filtered reg file
     reg_conf.read(main_conf.get("Paths", "FilteredRegFile"))
+    reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
     sections = reg_conf.sections()
 
     for sec in sections:
         sec_without_hklm = sec.replace("HKEY_LOCAL_MACHINE\\", "")
-
+        #write the keys for later use in auditing
+        sec_for_powershell=sec.repplace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
+        reg_keys_path.write(sec_for_powershell)
         # Open the key, and if doesn't exist create it
         try:
             reg_key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, sec_without_hklm, 0,
