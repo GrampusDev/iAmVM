@@ -25,4 +25,4 @@ if '%errorlevel%' NEQ '0' (
 :--------------------------------------
 @echo off
 data\PsExec.exe -s -d -i C:\Python27\pythonw.exe %~dp0iAmVM.py
-data\PsExec.exe -s -d -i cmd.exe
+:data\PsExec.exe -s -d -i cmd.exe

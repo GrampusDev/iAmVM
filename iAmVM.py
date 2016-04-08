@@ -42,7 +42,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.pushButton_9.clicked.connect(self.add_audits_click)
         self.ui.pushButton_10.clicked.connect(self.exit_click)
         self.ui.pushButton_11.clicked.connect(self.network_defence_click)
-
+        self.ui.pushButton_12.clicked.connect(self.daemon_click)
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
         create_reg_keys()
@@ -85,7 +85,7 @@ class MyForm(QtGui.QMainWindow):
 
     def add_audits_click(self):
         self.ui.textEdit.setText("Adding auditing...")
-        # run_powershell()
+        run_powershell()
         self.ui.textEdit.setText("Done Adding auditing")
 
     def network_defence_click(self):
@@ -93,6 +93,12 @@ class MyForm(QtGui.QMainWindow):
         response = ''
         # response = start_network_defence()
         self.ui.textEdit.setText(response)
+
+    def daemon_click(self):
+        self.ui.textEdit.setText("Starting daemon...")
+        response = ''
+        self.ui.textEdit.setText(response)
+        response = os.popen("pythonw daemon.py")
 
     def exit_click(self):
         self.close()

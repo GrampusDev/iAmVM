@@ -29,7 +29,7 @@ if ($action -eq "Install") {
 
     auditpol.exe /set /subcategory:"File System" /success:enable /failure:enable
     auditpol.exe /set /subcategory:"Registry" /success:enable /failure:enable
-    auditpol.exe /get /category:"Object Access"| Out-File -FilePath "audit_policies_after_install.txt"
+    auditpol.exe /get /category:"Object Access"| Out-File -FilePath ".\logs\audit_policies_after_install.txt"
     } 
 else { 
 
@@ -51,5 +51,5 @@ else {
 
     auditpol.exe /set /subcategory:"File System" /success:disable /failure:disable
     auditpol.exe /set /subcategory:"Registry" /success:disable /failure:disable
-    auditpol.exe /get /category:"Object Access"| Out-File -FilePath "audit_policies_after_remove.txt"
+    auditpol.exe /get /category:"Object Access"| Out-File -FilePath ".\logs\audit_policies_after_remove.txt"
     }
