@@ -50,7 +50,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.pushButton_12.clicked.connect(self.daemon_click)
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
-        create_reg_keys()
+        # create_reg_keys()
         self.ui.textEdit.setText("Done Transforming to VM")
 
     def transform_to_physical_click(self):
@@ -60,7 +60,7 @@ class MyForm(QtGui.QMainWindow):
 
     def filter_reg_click(self):
         self.ui.textEdit.setText("Filtering the registry file...")
-        filter_reg_file()
+        # filter_reg_file()
         self.ui.textEdit.setText("Done Filtering the registry file")
 
     def spoof_to_vm_mac_click(self):
@@ -90,7 +90,7 @@ class MyForm(QtGui.QMainWindow):
 
     def add_audits_click(self):
         self.ui.textEdit.setText("Adding auditing...")
-        run_powershell()
+        # run_powershell()
         self.ui.textEdit.setText("Done Adding auditing")
 
     def network_defence_click(self):
@@ -103,7 +103,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.textEdit.setText("Starting daemon...")
         response = ''
         self.ui.textEdit.setText(response)
-        response = os.popen("pythonw daemon.py")
+        # response = os.popen("pythonw daemon.py")
 
     def exit_click(self):
         self.close()
@@ -442,28 +442,28 @@ if __name__ == '__main__':
                 # create_reg_keys()
             elif ans == '2':
                 print 'Transforming to physical...'
-                remove_reg_keys()
+                # remove_reg_keys()
             elif ans == '3':
                 print 'Filtering reg file...'
-                filter_reg_file()
+                # filter_reg_file()
             elif ans == '4':
                 print 'Changing MAC...'
-                spoof_to_vm_mac()
+                # spoof_to_vm_mac()
             elif ans == '5':
                 print 'Reverting MAC...'
-                revert_to_physical_mac()
+                # revert_to_physical_mac()
             elif ans == '6':
                 print 'Creating VM files...'
-                create_files()
+                # create_files()
             elif ans == '7':
                 print 'Removing VM files MAC...'
-                remove_files()
+                # remove_files()
             elif ans == '8':
                 print 'Creating dummy processes...'
-                create_dummy_process()
+                # create_dummy_process()
             elif ans == '9':
                 print 'Adding audits and creating services...'
-                run_powershell()
+                # run_powershell()
             else:
                 print 'Have a nice day!'
                 exit(1)
