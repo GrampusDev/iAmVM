@@ -8,6 +8,11 @@ import subprocess
 import sys
 import socket
 
+GUI_MODE = 1
+CMD_MODE = 0
+
+mode = GUI_MODE     # Change to relevant running mode
+
 from PyQt4 import QtCore, QtGui
 from iAmVM_GUI import Ui_Form
 
@@ -172,14 +177,14 @@ def create_reg_keys():
 
     # Get sections from already filtered reg file
     reg_conf.read(main_conf.get("Paths", "FilteredRegFile"))
-    reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
+    # reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
     sections = reg_conf.sections()
 
     for sec in sections:
         sec_without_hklm = sec.replace("HKEY_LOCAL_MACHINE\\", "")
         #write the keys for later use in auditing
-        sec_for_powershell=sec.repplace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
-        reg_keys_path.write(sec_for_powershell)
+        # sec_for_powershell=sec.repplace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
+        # reg_keys_path.write(sec_for_powershell)
         # Open the key, and if doesn't exist create it
         try:
             reg_key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, sec_without_hklm, 0,
@@ -331,18 +336,21 @@ def create_files():
     files_name_file = (main_conf.get("Paths", "fileNames"))
     files_name = open(files_name_file, 'r')
     print("Creating Files...\n")
-    for file in files_name:
-        file=file.rstrip()
-        if not os.path.isfile(file):
-            dir_path = os.path.dirname(file)
-            if not os.path.isdir(dir_path):
-                try:
-                    os.makedirs(dir_path)
-                except OSError as exception:
-                    print("Couldn't make dir " + repr(dir))
-            f=open(file,'w+')
-            f.close()
-            print(repr(file))
+    for file_name in files_name:
+        try:
+            file_name = file_name.rstrip()
+            if not os.path.isfile(file_name):
+                dir_path = os.path.dirname(file_name)
+                if not os.path.isdir(dir_path):
+                    try:
+                        os.makedirs(dir_path)
+                    except OSError as exception:
+                        print("Couldn't make dir " + repr(dir))
+                f = open(file_name, 'w+')
+                f.close()
+                print(repr(file_name))
+        except Exception as e:
+            print e
     print("Done!")
     return
 
@@ -351,19 +359,19 @@ def remove_files():
     "Remove Files, where located at the file_name"
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
-    files_name_file=(main_conf.get("Paths", "fileNames"))
-    files_name=open(files_name_file,'r')
+    files_name_file = (main_conf.get("Paths", "fileNames"))
+    files_name = open(files_name_file,'r')
     print("Removing Files...\n")
-    for file in files_name:
-        file=file.rstrip()
-        if os.path.isfile(file):
-            os.remove(file)
-            dir_path = os.path.dirname(file)
+    for file_name in files_name:
+        file_name = file_name.rstrip()
+        if os.path.isfile(file_name):
+            os.remove(file_name)
+            dir_path = os.path.dirname(file_name)
             try:
                 os.removedirs(dir_path)
             except OSError as exception:
                 pass
-            print(file)
+            print(file_name)
     print("Done!")
     return
 
@@ -406,53 +414,56 @@ def run_powershell():
 if __name__ == '__main__':
     # Change working directory to script directory
     os.chdir(os.path.dirname(sys.argv[0]))
-
     # Check if the script runs as admin
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
         print "You should run it as admin, exiting..."
-    else:
+        exit(1)
+    if mode == GUI_MODE:
         app = QtGui.QApplication(sys.argv)
         my_app = MyForm()
         my_app.show()
         sys.exit(app.exec_())
-        # ans = raw_input('Welcome to iAmVM, choose option: \n'
-        #                 '1. Transform to VM Registry\n'
-        #                 '2. Transform back to physical PC\n'
-        #                 '3. Filter reg file\n'
-        #                 '4. Spoof to VM MAC\n'
-        #                 '5. Revert to physical MAC\n'
-        #                 '6. Create VM files\n'
-        #                 '7. Remove VM files\n'
-        #                 '8. Create Processes\n'
-        #                 '9. Add Audits and create services \n'
-        #                 '10. Exit\n\n'
-        #                 '--> ')
-        # if ans == '1':
-        #     print 'Transforming to VM...'
-        #     # create_reg_keys()
-        # elif ans == '2':
-        #     print 'Transforming to physical...'
-        #     remove_reg_keys()
-        # elif ans == '3':
-        #     print 'Filtering reg file...'
-        #     filter_reg_file()
-        # elif ans == '4':
-        #     print 'Changing MAC...'
-        #     spoof_to_vm_mac()
-        # elif ans == '5':
-        #     print 'Reverting MAC...'
-        #     revert_to_physical_mac()
-        # elif ans == '6':
-        #     print 'Creating VM files...'
-        #     create_files()
-        # elif ans == '7':
-        #     print 'Removing VM files MAC...'
-        #     remove_files()
-        # elif ans == '8':
-        #     print 'Creating dummy processes...'
-        #     create_dummy_process()
-        # elif ans == '9':
-        #     print 'Adding audits and creating services...'
-        #     run_powershell()
-        # else:
-        #     print 'Have a nice day!'
+    else:
+        while True:
+            ans = raw_input('Welcome to iAmVM, choose option: \n'
+                            '1. Transform to VM Registry\n'
+                            '2. Transform back to physical PC\n'
+                            '3. Filter reg file\n'
+                            '4. Spoof to VM MAC\n'
+                            '5. Revert to physical MAC\n'
+                            '6. Create VM files\n'
+                            '7. Remove VM files\n'
+                            '8. Create Processes\n'
+                            '9. Add Audits and create services \n'
+                            '10. Exit\n\n'
+                            '--> ')
+            if ans == '1':
+                print 'Transforming to VM...'
+                # create_reg_keys()
+            elif ans == '2':
+                print 'Transforming to physical...'
+                remove_reg_keys()
+            elif ans == '3':
+                print 'Filtering reg file...'
+                filter_reg_file()
+            elif ans == '4':
+                print 'Changing MAC...'
+                spoof_to_vm_mac()
+            elif ans == '5':
+                print 'Reverting MAC...'
+                revert_to_physical_mac()
+            elif ans == '6':
+                print 'Creating VM files...'
+                create_files()
+            elif ans == '7':
+                print 'Removing VM files MAC...'
+                remove_files()
+            elif ans == '8':
+                print 'Creating dummy processes...'
+                create_dummy_process()
+            elif ans == '9':
+                print 'Adding audits and creating services...'
+                run_powershell()
+            else:
+                print 'Have a nice day!'
+                exit(1)
