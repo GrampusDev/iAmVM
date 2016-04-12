@@ -71,8 +71,6 @@ C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxDrvInst.exe
 C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxGuest.sys
 C:/Windows/System32/drivers/VBoxGuest.sys
 C:/Windows/System32/DriverStore/FileRepository/vboxguest.inf_amd64_132ed43dc11fdf95/VBoxGuest.sys
-C:/Windows/System32/VBoxMRXNP.dll
-C:/Windows/SysWOW64/VBoxMRXNP.dll
 C:/Program Files/Oracle/VirtualBox Guest Additions/VBoxOGLcrutil.dll
 C:/Windows/System32/DriverStore/FileRepository/vboxvideow8.inf_amd64_7d72d2b96bf18759/VBoxOGLcrutil.dll
 C:/Windows/System32/VBoxOGLcrutil.dll
