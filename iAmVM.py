@@ -7,6 +7,8 @@ import ConfigParser
 import subprocess
 import sys
 import socket
+import logging
+
 
 GUI_MODE = 1
 CMD_MODE = 0
@@ -20,9 +22,6 @@ from spoofmac.interface import (
     set_interface_mac,
     get_os_spoofer
 )
-
-import logging
-logging.basicConfig(filename='iAmLog.log', level=logging.DEBUG)
 
 # Main configuration file
 main_conf_path = r".\iAmVM_conf.ini"
@@ -307,14 +306,22 @@ def spoof_to_vm_mac():
     if not main_conf.has_section('OldMacs'):
         main_conf.add_section('OldMacs')
     for port, device, address, current_address in spoofer.find_interfaces():
-        # Save old MAC
-        main_conf.set('OldMacs', device, address.replace('-', ':'))
+        try:
+            # Save old MAC
+            main_conf.set('OldMacs', device, address.replace('-', ':'))
 
-        new_mac = get_random_mac()
-        set_interface_mac(device, new_mac, port)
-    f = open(main_conf_path, 'w')
-    main_conf.write(f)
-    f.close()
+            new_mac = get_random_mac()
+            set_interface_mac(device, new_mac, port)
+        except Exception as e:
+            logging.warning(e)
+            print e
+    try:
+        f = open(main_conf_path, 'w')
+        main_conf.write(f)
+        f.close()
+    except IOError as e:
+        logging.warning(e)
+        print e
 
 
 def revert_to_physical_mac():
@@ -325,8 +332,12 @@ def revert_to_physical_mac():
     main_conf.read(main_conf_path)
     spoofer = get_os_spoofer()
     for port, device, address, current_address in spoofer.find_interfaces():
-        old_mac = main_conf.get('OldMacs', device)
-        set_interface_mac(device, old_mac, port)
+        try:
+            old_mac = main_conf.get('OldMacs', device)
+            set_interface_mac(device, old_mac, port)
+        except Exception as e:
+            logging.warning(e)
+            print e
 
 
 def create_files():
@@ -344,12 +355,14 @@ def create_files():
                 if not os.path.isdir(dir_path):
                     try:
                         os.makedirs(dir_path)
-                    except OSError as exception:
+                    except OSError:
+                        logging.warning("Couldn't make dir " + repr(dir))
                         print("Couldn't make dir " + repr(dir))
                 f = open(file_name, 'w+')
                 f.close()
                 print(repr(file_name))
         except Exception as e:
+            logging.warning(e)
             print e
     print("Done!")
     return
@@ -360,18 +373,22 @@ def remove_files():
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
     files_name_file = (main_conf.get("Paths", "fileNames"))
-    files_name = open(files_name_file,'r')
+    files_name = open(files_name_file, 'r')
     print("Removing Files...\n")
     for file_name in files_name:
-        file_name = file_name.rstrip()
-        if os.path.isfile(file_name):
-            os.remove(file_name)
-            dir_path = os.path.dirname(file_name)
-            try:
-                os.removedirs(dir_path)
-            except OSError as exception:
-                pass
-            print(file_name)
+        try:
+            file_name = file_name.rstrip()
+            if os.path.isfile(file_name):
+                os.remove(file_name)
+                dir_path = os.path.dirname(file_name)
+                try:
+                    os.removedirs(dir_path)
+                except OSError as exception:
+                    pass
+                print(file_name)
+        except Exception as e:
+            logging.warning(e)
+            print e
     print("Done!")
     return
 
@@ -414,11 +431,13 @@ def run_powershell():
 if __name__ == '__main__':
     # Change working directory to script directory
     os.chdir(os.path.dirname(sys.argv[0]))
+    logging.basicConfig(filename='iAmLog.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
     # Check if the script runs as admin
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
         print "You should run it as admin, exiting..."
         exit(1)
     if mode == GUI_MODE:
+        logging.info("Running GUI..")
         app = QtGui.QApplication(sys.argv)
         my_app = MyForm()
         my_app.show()
