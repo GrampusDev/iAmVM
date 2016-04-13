@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>iAmVM</class>
+ <widget class="QMainWindow" name="iAmVM">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>391</width>
+    <height>255</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>iAmVM</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icons/Virtualbox_logo.png</normaloff>icons/Virtualbox_logo.png</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(226, 233, 255);</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="block">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>190</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Block</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/Remove.png</normaloff>icons/Remove.png</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="allow_once">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>190</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Allow Once</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/accept.png</normaloff>icons/accept.png</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="allow">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>190</y>
+      <width>91</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Allow</string>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>icons/accept.png</normaloff>icons/accept.png</iconset>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textBox">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>20</y>
+      <width>331</width>
+      <height>151</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

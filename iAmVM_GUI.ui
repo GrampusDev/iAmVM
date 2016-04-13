@@ -27,25 +27,25 @@
    <property name="geometry">
     <rect>
      <x>100</x>
-     <y>20</y>
+     <y>30</y>
      <width>201</width>
-     <height>51</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Aharoni</family>
-     <pointsize>11</pointsize>
+     <pointsize>16</pointsize>
      <weight>75</weight>
      <bold>true</bold>
+     <underline>false</underline>
     </font>
    </property>
    <property name="styleSheet">
     <string notr="true">color: rgb(33, 80, 138);</string>
    </property>
    <property name="text">
-    <string>Welcome to iAmVM!
-What would you like to do:</string>
+    <string>Welcome to iAmVM</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
@@ -224,11 +224,11 @@ What would you like to do:</string>
     </rect>
    </property>
    <property name="text">
-    <string>Run Daemon</string>
+    <string>Run Monitor</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>icons/Network.ico</normaloff>icons/Network.ico</iconset>
+     <normaloff>icons/Activity Monitor.ico</normaloff>icons/Activity Monitor.ico</iconset>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton_7">

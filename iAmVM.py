@@ -98,9 +98,8 @@ class MyForm(QtGui.QMainWindow):
 
     def daemon_click(self):
         self.ui.textEdit.setText("Starting daemon...")
-        response = ''
-        self.ui.textEdit.setText(response)
-        # response = os.popen("pythonw daemon.py")
+        os.popen("pythonw daemon.py")
+        self.ui.textEdit.setText("Daemon started")
 
     def exit_click(self):
         self.close()
@@ -403,20 +402,24 @@ def create_dummy_process():
     process_list_file = (main_conf.get("Paths", "processList"))
     process_list = open(process_list_file, 'r')
     for filepath in process_list:
-        filename = os.path.splitext(os.path.basename(filepath))[0]
-        reg_path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+        try:
+            filepath = filepath.strip()
+            filename = os.path.splitext(os.path.basename(filepath))[0]
+            reg_path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 
-        # copy file to filepath
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        shutil.copy2(src, filepath)
+            # copy file to filepath
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            shutil.copy2(src, filepath)
 
-        # add to registry
-        key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, reg_path, 0, wreg.KEY_ALL_ACCESS)
-        wreg.SetValueEx(key, filename, 0, wreg.REG_SZ, filepath)
-        wreg.CloseKey(key)
-        subprocess.Popen(filepath, creationflags=DETACHED_PROCESS)
-        print ("Created Process " + filepath)
+            # add to registry
+            key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, reg_path, 0, wreg.KEY_ALL_ACCESS)
+            wreg.SetValueEx(key, filename, 0, wreg.REG_SZ, filepath)
+            wreg.CloseKey(key)
+            subprocess.Popen(filepath, creationflags=DETACHED_PROCESS)
+            print ("Created Process " + filepath)
+        except Exception as e:
+            logging.warning(e)
 
 
 def run_powershell():
@@ -481,7 +484,8 @@ if __name__ == '__main__':
                             '6. Create Processes\n'
                             '7. Add Audits and create services \n'
                             '8. Create pseudo devices \n'
-                            '9. Exit\n\n'
+                            '9. Start daemon audit \n'
+                            '10. Exit\n\n'
                             '--> ')
             if ans == '1':
                 print 'Transforming to VM...'
@@ -507,6 +511,9 @@ if __name__ == '__main__':
             elif ans == '8':
                 print 'Creating pseudo devices...'
                 # create_pseudo_devices()
+            elif ans == '9':
+                print '"Daemon started"'
+                # os.popen("pythonw daemon.py")
             else:
                 print 'Have a nice day!'
                 exit(1)
