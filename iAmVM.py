@@ -49,7 +49,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.pushButton_12.clicked.connect(self.daemon_click)
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
-        # create_reg_keys()
+        #create_reg_keys()
         self.ui.textEdit.setText("Done Transforming to VM")
 
     def transform_to_physical_click(self):
@@ -84,12 +84,12 @@ class MyForm(QtGui.QMainWindow):
 
     def create_vm_processes_click(self):
         self.ui.textEdit.setText("Creating VM processes...")
-        # create_dummy_process()
+        #create_dummy_process()
         self.ui.textEdit.setText("Done Creating VM processes")
 
     def add_audits_click(self):
         self.ui.textEdit.setText("Adding auditing...")
-        # run_powershell()
+        #run_powershell()
         self.ui.textEdit.setText("Done Adding auditing")
 
     def network_defence_click(self):
@@ -176,14 +176,15 @@ def create_reg_keys():
 
     # Get sections from already filtered reg file
     reg_conf.read(main_conf.get("Paths", "FilteredRegFile"))
-    # reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
+    reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
     sections = reg_conf.sections()
 
     for sec in sections:
+
         sec_without_hklm = sec.replace("HKEY_LOCAL_MACHINE\\", "")
         #write the keys for later use in auditing
-        # sec_for_powershell=sec.repplace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
-        # reg_keys_path.write(sec_for_powershell)
+        sec_for_powershell=sec.replace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
+        reg_keys_path.write(sec_for_powershell+"\n")
         # Open the key, and if doesn't exist create it
         try:
             reg_key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, sec_without_hklm, 0,
@@ -413,6 +414,8 @@ def create_dummy_process():
         key=wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE,reg_path,0,wreg.KEY_ALL_ACCESS)
         wreg.SetValueEx(key,filename,0,wreg.REG_SZ,filepath)
         wreg.CloseKey(key)
+        DETACHED_PROCESS = 0x00000008
+        subprocess.Popen(filepath,creationflags=DETACHED_PROCESS)
         print ("Created Process " + filepath)
 
 
