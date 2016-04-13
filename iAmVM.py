@@ -8,13 +8,8 @@ import subprocess
 import sys
 import socket
 import logging
-
-
-GUI_MODE = 1
-CMD_MODE = 0
-
-mode = GUI_MODE     # Change to relevant running mode
-
+import win32file
+import win32pipe
 from PyQt4 import QtCore, QtGui
 from iAmVM_GUI import Ui_Form
 
@@ -22,6 +17,13 @@ from spoofmac.interface import (
     set_interface_mac,
     get_os_spoofer
 )
+
+GUI_MODE = 1
+CMD_MODE = 0
+DETACHED_PROCESS = 0x00000008
+
+mode = GUI_MODE  # Change to relevant running mode
+
 
 # Main configuration file
 main_conf_path = r".\iAmVM_conf.ini"
@@ -33,20 +35,21 @@ class MyForm(QtGui.QMainWindow):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
+        self.setStyle(QtGui.QStyleFactory.create("plastique"))
         # self.setStyleSheet("background-image: url(./iAmVM_Background2.jpg); background-repeat: no-repeat; background-position: center;")
 
         self.ui.pushButton.clicked.connect(self.transform_to_vm_click)
         self.ui.pushButton_2.clicked.connect(self.transform_to_physical_click)
         self.ui.pushButton_3.clicked.connect(self.filter_reg_click)
         self.ui.pushButton_4.clicked.connect(self.spoof_to_vm_mac_click)
-        self.ui.pushButton_5.clicked.connect(self.revert_to_physical_mac_click)
         self.ui.pushButton_6.clicked.connect(self.create_vm_files_click)
-        self.ui.pushButton_7.clicked.connect(self.remove_vm_files_click)
+        self.ui.pushButton_7.clicked.connect(self.create_pseudo_devices)
         self.ui.pushButton_8.clicked.connect(self.create_vm_processes_click)
         self.ui.pushButton_9.clicked.connect(self.add_audits_click)
         self.ui.pushButton_10.clicked.connect(self.exit_click)
         self.ui.pushButton_11.clicked.connect(self.network_defence_click)
         self.ui.pushButton_12.clicked.connect(self.daemon_click)
+
     def transform_to_vm_click(self):
         self.ui.textEdit.setText("Transforming to VM...")
         # create_reg_keys()
@@ -54,7 +57,7 @@ class MyForm(QtGui.QMainWindow):
 
     def transform_to_physical_click(self):
         self.ui.textEdit.setText("Transforming to Physical...")
-        # remove_reg_keys()
+        # back_to_physical()
         self.ui.textEdit.setText("Done Transforming to Physical")
 
     def filter_reg_click(self):
@@ -67,20 +70,15 @@ class MyForm(QtGui.QMainWindow):
         # spoof_to_vm_mac()
         self.ui.textEdit.setText("Done Spoofing to VM MAC")
 
-    def revert_to_physical_mac_click(self):
-        self.ui.textEdit.setText("Reverting to original MAC...")
-        # revert_to_physical_mac()
-        self.ui.textEdit.setText("Done Reverting to original MAC")
-
     def create_vm_files_click(self):
         self.ui.textEdit.setText("Creating VM files...")
         # create_files()
         self.ui.textEdit.setText("Done Creating VM files")
 
-    def remove_vm_files_click(self):
-        self.ui.textEdit.setText("Removing VM files...")
-        # remove_files()
-        self.ui.textEdit.setText("Done Removing VM files")
+    def create_pseudo_devices(self):
+        self.ui.textEdit.setText("Create pseudo devices...")
+        # create_pseudo_devices()
+        self.ui.textEdit.setText("Done creating pseudo devices")
 
     def create_vm_processes_click(self):
         self.ui.textEdit.setText("Creating VM processes...")
@@ -156,14 +154,18 @@ def apply_reg_change(reg_key, reg_values):
         wreg.SetValueEx(reg_key, val.name, 0, val.type, val.data)
 
 
-# TODO: This function
-def remove_reg_keys():
+def back_to_physical():
+    # Registry
     try:
         wreg.DeleteKeyEx(wreg.HKEY_LOCAL_MACHINE,
                          "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Oracle VM VirtualBox Guest Additions",
                          (wreg.KEY_WOW64_64KEY + wreg.KEY_ALL_ACCESS), 0)
     except WindowsError as err:
         print "Failed to delete: ", err
+
+    remove_pseudo_devices()  # Pseudo devices
+    remove_files()  # Remove VBOX files
+    revert_to_physical_mac()  # Change to the original MAC
 
 
 def create_reg_keys():
@@ -176,14 +178,14 @@ def create_reg_keys():
 
     # Get sections from already filtered reg file
     reg_conf.read(main_conf.get("Paths", "FilteredRegFile"))
-    # reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
+    reg_keys_path = open(main_conf.get("Paths", "regKeysPath"),"w+", 0)
     sections = reg_conf.sections()
 
     for sec in sections:
         sec_without_hklm = sec.replace("HKEY_LOCAL_MACHINE\\", "")
-        #write the keys for later use in auditing
-        # sec_for_powershell=sec.repplace("HKEY_LOCAL_MACHINE\\","HKLM:\\")
-        # reg_keys_path.write(sec_for_powershell)
+        # write the keys for later use in auditing
+        sec_for_powershell = sec.replace("HKEY_LOCAL_MACHINE\\", "HKLM:\\")
+        reg_keys_path.write(sec_for_powershell + '\n')
         # Open the key, and if doesn't exist create it
         try:
             reg_key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, sec_without_hklm, 0,
@@ -397,34 +399,58 @@ def create_dummy_process():
     "runs filepath as a process at system startup"
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
-    src=(main_conf.get("Paths", "processExec"))
-    process_list_file=(main_conf.get("Paths", "processList"))
-    process_list=open(process_list_file,'r')
+    src = (main_conf.get("Paths", "processExec"))
+    process_list_file = (main_conf.get("Paths", "processList"))
+    process_list = open(process_list_file, 'r')
     for filepath in process_list:
-        filename=os.path.splitext(os.path.basename(filepath))[0]
-        reg_path="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+        filename = os.path.splitext(os.path.basename(filepath))[0]
+        reg_path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
 
-        #copy file to filepath
+        # copy file to filepath
         if os.path.exists(filepath):
             os.remove(filepath)
-        shutil.copy2(src,filepath)
+        shutil.copy2(src, filepath)
 
-        #add to registry
-        key=wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE,reg_path,0,wreg.KEY_ALL_ACCESS)
-        wreg.SetValueEx(key,filename,0,wreg.REG_SZ,filepath)
+        # add to registry
+        key = wreg.OpenKey(wreg.HKEY_LOCAL_MACHINE, reg_path, 0, wreg.KEY_ALL_ACCESS)
+        wreg.SetValueEx(key, filename, 0, wreg.REG_SZ, filepath)
         wreg.CloseKey(key)
+        subprocess.Popen(filepath, creationflags=DETACHED_PROCESS)
         print ("Created Process " + filepath)
 
 
 def run_powershell():
     main_conf = ConfigParser.ConfigParser()
     main_conf.read(main_conf_path)
-    script_name=(main_conf.get("Paths", "psScript"))
-    psScript=os.path.abspath(script_name)
-    cmd="powershell -ExecutionPolicy Bypass -Command \"" + psScript + " Install\""
+    script_name = (main_conf.get("Paths", "psScript"))
+    psScript = os.path.abspath(script_name)
+    cmd = "powershell -ExecutionPolicy Bypass -Command \"" + psScript + " Install\""
     print cmd
-    proc=subprocess.call(cmd,shell=True)
+    proc = subprocess.call(cmd, shell=True)
     print 2
+
+
+def create_pseudo_devices():
+    global pipe1
+    global pipe2
+    try:
+        pipe1 = win32pipe.CreateNamedPipe("\\\\.\\pipe\VBoxMiniRdDN", win32pipe.PIPE_ACCESS_DUPLEX,
+                                          win32pipe.PIPE_TYPE_MESSAGE,
+                                          win32pipe.PIPE_UNLIMITED_INSTANCES,
+                                          65536, 65536, 300, None)
+        pipe2 = win32pipe.CreateNamedPipe("\\\\.\\pipe\VBoxTrayIPC", win32pipe.PIPE_ACCESS_DUPLEX,
+                                          win32pipe.PIPE_TYPE_MESSAGE,
+                                          win32pipe.PIPE_UNLIMITED_INSTANCES,
+                                          65536, 65536, 300, None)
+    except Exception as e:
+        logging.warning(e)
+    # f = win32file.CreateFile("\\.\\VBoxTrayIPC", win32file.GENERIC_READ,
+    #                          win32file.FILE_SHARE_READ, None, win32file.CREATE_NEW, 0, None)
+
+
+def remove_pseudo_devices():
+    pipe1.close()
+    pipe2.close()
 
 
 # Main
@@ -436,6 +462,8 @@ if __name__ == '__main__':
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
         print "You should run it as admin, exiting..."
         exit(1)
+    pipe1 = 0
+    pipe2 = 0
     if mode == GUI_MODE:
         logging.info("Running GUI..")
         app = QtGui.QApplication(sys.argv)
@@ -449,19 +477,18 @@ if __name__ == '__main__':
                             '2. Transform back to physical PC\n'
                             '3. Filter reg file\n'
                             '4. Spoof to VM MAC\n'
-                            '5. Revert to physical MAC\n'
-                            '6. Create VM files\n'
-                            '7. Remove VM files\n'
-                            '8. Create Processes\n'
-                            '9. Add Audits and create services \n'
-                            '10. Exit\n\n'
+                            '5. Create VM files\n'
+                            '6. Create Processes\n'
+                            '7. Add Audits and create services \n'
+                            '8. Create pseudo devices \n'
+                            '9. Exit\n\n'
                             '--> ')
             if ans == '1':
                 print 'Transforming to VM...'
                 # create_reg_keys()
             elif ans == '2':
                 print 'Transforming to physical...'
-                # remove_reg_keys()
+                # back_to_physical()
             elif ans == '3':
                 print 'Filtering reg file...'
                 # filter_reg_file()
@@ -469,20 +496,17 @@ if __name__ == '__main__':
                 print 'Changing MAC...'
                 # spoof_to_vm_mac()
             elif ans == '5':
-                print 'Reverting MAC...'
-                # revert_to_physical_mac()
-            elif ans == '6':
                 print 'Creating VM files...'
                 # create_files()
-            elif ans == '7':
-                print 'Removing VM files MAC...'
-                # remove_files()
-            elif ans == '8':
+            elif ans == '6':
                 print 'Creating dummy processes...'
                 # create_dummy_process()
-            elif ans == '9':
+            elif ans == '7':
                 print 'Adding audits and creating services...'
                 # run_powershell()
+            elif ans == '8':
+                print 'Creating pseudo devices...'
+                # create_pseudo_devices()
             else:
                 print 'Have a nice day!'
                 exit(1)
