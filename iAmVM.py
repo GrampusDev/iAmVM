@@ -8,8 +8,7 @@ import subprocess
 import sys
 import socket
 import logging
-import win32file
-import win32pipe
+import win32file, win32pipe, win32con, win32api, win32gui, winerror
 from PyQt4 import QtCore, QtGui
 from iAmVM_GUI import Ui_Form
 
@@ -42,6 +41,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.pushButton_2.clicked.connect(self.transform_to_physical_click)
         self.ui.pushButton_3.clicked.connect(self.filter_reg_click)
         self.ui.pushButton_4.clicked.connect(self.spoof_to_vm_mac_click)
+        self.ui.pushButton_5.clicked.connect(self.create_vboxtray_windows_click)
         self.ui.pushButton_6.clicked.connect(self.create_vm_files_click)
         self.ui.pushButton_7.clicked.connect(self.create_pseudo_devices)
         self.ui.pushButton_8.clicked.connect(self.create_vm_processes_click)
@@ -78,12 +78,17 @@ class MyForm(QtGui.QMainWindow):
     def create_pseudo_devices(self):
         self.ui.textEdit.setText("Create pseudo devices...")
         # create_pseudo_devices()
-        self.ui.textEdit.setText("Done creating pseudo devices")
+        self.ui.textEdit.setText("Done Creating pseudo devices")
 
     def create_vm_processes_click(self):
         self.ui.textEdit.setText("Creating VM processes...")
         # create_dummy_process()
         self.ui.textEdit.setText("Done Creating VM processes")
+
+    def create_vboxtray_windows_click(self):
+        self.ui.textEdit.setText("Creating fake windows...")
+        # create_vboxtray_windows()
+        self.ui.textEdit.setText("Done Creating fake windows")
 
     def add_audits_click(self):
         self.ui.textEdit.setText("Adding auditing...")
@@ -98,7 +103,7 @@ class MyForm(QtGui.QMainWindow):
 
     def daemon_click(self):
         self.ui.textEdit.setText("Starting daemon...")
-        os.popen("pythonw daemon.py")
+        subprocess.Popen("pythonw daemon.py", creationflags=DETACHED_PROCESS)
         self.ui.textEdit.setText("Daemon started")
 
     def exit_click(self):
@@ -165,6 +170,9 @@ def back_to_physical():
     remove_pseudo_devices()  # Pseudo devices
     remove_files()  # Remove VBOX files
     revert_to_physical_mac()  # Change to the original MAC
+    # Destroy VBoxTray window
+    if hwnd != 0:
+        win32gui.DestroyWindow(hwnd)
 
 
 def create_reg_keys():
@@ -430,7 +438,6 @@ def run_powershell():
     cmd = "powershell -ExecutionPolicy Bypass -Command \"" + psScript + " Install\""
     print cmd
     proc = subprocess.call(cmd, shell=True)
-    print 2
 
 
 def create_pseudo_devices():
@@ -440,11 +447,11 @@ def create_pseudo_devices():
         pipe1 = win32pipe.CreateNamedPipe("\\\\.\\pipe\VBoxMiniRdDN", win32pipe.PIPE_ACCESS_DUPLEX,
                                           win32pipe.PIPE_TYPE_MESSAGE,
                                           win32pipe.PIPE_UNLIMITED_INSTANCES,
-                                          65536, 65536, 300, None)
+                                          65536, 65536, 10, None)
         pipe2 = win32pipe.CreateNamedPipe("\\\\.\\pipe\VBoxTrayIPC", win32pipe.PIPE_ACCESS_DUPLEX,
                                           win32pipe.PIPE_TYPE_MESSAGE,
                                           win32pipe.PIPE_UNLIMITED_INSTANCES,
-                                          65536, 65536, 300, None)
+                                          65536, 65536, 10, None)
     except Exception as e:
         logging.warning(e)
     # f = win32file.CreateFile("\\.\\VBoxTrayIPC", win32file.GENERIC_READ,
@@ -452,14 +459,42 @@ def create_pseudo_devices():
 
 
 def remove_pseudo_devices():
-    pipe1.close()
-    pipe2.close()
+    if pipe1 != 0:
+        pipe1.close()
+    if pipe2 != 0:
+        pipe2.close()
 
+
+def create_vboxtray_windows():
+    # Register the Window class.
+    wc = win32gui.WNDCLASS()
+    hinst = wc.hInstance = win32api.GetModuleHandle(None)
+    wc.lpszClassName = "VBoxTrayToolWndClass"
+    wc.style = win32con.CS_VREDRAW | win32con.CS_HREDRAW
+    wc.hCursor = win32api.LoadCursor(0, win32con.IDC_ARROW)
+    wc.hbrBackground = win32con.COLOR_WINDOW
+
+    # Don't blow up if class already registered to make testing easier
+    try:
+        classAtom = win32gui.RegisterClass(wc)
+    except win32gui.error, err_info:
+        if err_info.winerror != winerror.ERROR_CLASS_ALREADY_EXISTS:
+            raise
+
+    # Create the Window.
+    style = win32con.WS_OVERLAPPED | win32con.WS_SYSMENU
+    hwnd = win32gui.CreateWindow(wc.lpszClassName, "VBoxTrayToolWnd", style, 0, 0,
+                                 win32con.CW_USEDEFAULT, win32con.CW_USEDEFAULT, 0, 0,
+                                 hinst, None)
+    win32gui.UpdateWindow(hwnd)
 
 # Main
 if __name__ == '__main__':
     # Change working directory to script directory
-    os.chdir(os.path.dirname(sys.argv[0]))
+    try:
+        os.chdir(os.path.dirname(sys.argv[0]))
+    except Exception as e:
+        logging.warning(e)
     logging.basicConfig(filename='iAmLog.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
     # Check if the script runs as admin
     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -467,6 +502,7 @@ if __name__ == '__main__':
         exit(1)
     pipe1 = 0
     pipe2 = 0
+    hwnd = 0
     if mode == GUI_MODE:
         logging.info("Running GUI..")
         app = QtGui.QApplication(sys.argv)
@@ -484,8 +520,9 @@ if __name__ == '__main__':
                             '6. Create Processes\n'
                             '7. Add Audits and create services \n'
                             '8. Create pseudo devices \n'
-                            '9. Start daemon audit \n'
-                            '10. Exit\n\n'
+                            '9. Start monitor \n'
+                            '10. Create fake windows \n'
+                            '11. Exit\n\n'
                             '--> ')
             if ans == '1':
                 print 'Transforming to VM...'
@@ -512,8 +549,11 @@ if __name__ == '__main__':
                 print 'Creating pseudo devices...'
                 # create_pseudo_devices()
             elif ans == '9':
-                print '"Daemon started"'
+                print 'Daemon started'
                 # os.popen("pythonw daemon.py")
+            elif ans == '10':
+                print 'Creating fake windows...'
+                # create_vboxtray_windows()
             else:
                 print 'Have a nice day!'
                 exit(1)

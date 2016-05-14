@@ -90,6 +90,7 @@ def doAction(eventCategory, timeGenererated, type, processId, processCalled, pro
 
 if __name__ == '__main__':
     logging.basicConfig(filename='iAmLog.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
+    logging.info("Running Monitor...")
     app = QtGui.QApplication(sys.argv)
     # read ini file
     main_conf_path = r".\iAmVM_conf.ini"
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                         for f in known_list:
                             for data in data_list:
                                 try:
-                                    if len(data_list) > 5 and f in data_list[6]:
+                                    if len(data_list) > 6 and f in data_list[6]:
                                         eventCategory = event.EventCategory
                                         timeGenererated = event.TimeGenerated
                                         type = event.EventType

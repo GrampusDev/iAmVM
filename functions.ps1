@@ -16,7 +16,7 @@
             $name = “Comment” + $CommentCount
             $ini[$section][$name] = $value
         }
-        "(.+?)\s*=(.*)" # Key
+        "(.+?)\s*\ =\ (.*)" # Key
         {
             $name,$value = $matches[1..2]
             $ini[$section][$name] = $value
