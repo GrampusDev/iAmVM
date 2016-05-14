@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>icons/Virtualbox_logo.png</normaloff>icons/Virtualbox_logo.png</iconset>
+    <normaloff>icons/shield.png</normaloff>icons/shield.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
